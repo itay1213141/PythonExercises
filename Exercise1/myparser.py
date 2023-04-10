@@ -4,8 +4,8 @@ from numpy import double
 from abc import ABC, abstractmethod
 
 number_regex = '^\d+$|^\d+\.\d+$'
-prec = {'-u': 5, '*': 4, '/': 3, '+': 2, '-': 1, '(': 0, '': 9}
-right = {'-u': 1}
+prec = {'-u': 5, '*': 4, '/': 3, '+': 1, '-': 1, '(': 0, '': 9}
+unary = ['-u']
 
 
 def get_precedence(op):
@@ -25,6 +25,8 @@ class Num(Expression):
     def calc(self) -> double:
         return self.number
 
+    def __str__(self) -> str:
+        return str(self.number)
 
 class UnaryMinus(Expression):
     def __init__(self, expression) -> None:
@@ -33,6 +35,8 @@ class UnaryMinus(Expression):
     def calc(self) -> double:
         return -self.expression.calc()
 
+    def __str__(self) -> str:
+        return f'(-{str(self.expression)})'
 
 class BinExp(Expression):
     def __init__(self, left, right) -> None:
@@ -42,35 +46,43 @@ class BinExp(Expression):
 
 class Plus(BinExp):
     def __init__(self, left, right) -> None:
-        super.__init__(left, right)
+        super().__init__(left, right)
 
     def calc(self) -> double:
         return self.left.calc() + self.right.calc()
 
+    def __str__(self) -> str:
+        return f'{str(self.left)}+{str(self.right)}'
 
 class Minus(BinExp):
     def __init__(self, left, right) -> None:
-        super.__init__(left, right)
+        super().__init__(left, right)
 
     def calc(self) -> double:
         return self.left.calc() - self.right.calc()
 
+    def __str__(self) -> str:
+        return f'{str(self.left)}-{str(self.right)}'
 
 class Mul(BinExp):
     def __init__(self, left, right) -> None:
-        super.__init__(left, right)
+        super().__init__(left, right)
 
     def calc(self) -> double:
         return self.left.calc() * self.right.calc()
 
+    def __str__(self) -> str:
+        return f'{str(self.left)}*{str(self.right)}'
 
 class Div(BinExp):
     def __init__(self, left, right) -> None:
-        super.__init__(left, right)
+        super().__init__(left, right)
 
     def calc(self) -> double:
         return self.left.calc() / self.right.calc()
 
+    def __str__(self) -> str:
+        return f'{str(self.left)}/{str(self.right)}'
 
 def split_tokens(expression):
     tokens = re.split('([+\-*/()]|\d+\.\d+|\d+)', expression.strip())
@@ -104,8 +116,8 @@ def split_tokens(expression):
                 raise Exception("No matching (")
         elif get_precedence(token) > 0:
             precedence = get_precedence(token)
-
-            if token in right:
+            
+            if token in unary:
                 while operators_stack and precedence < get_precedence(operators_stack[-1]):
                     queue.append(operators_stack.pop())
             else:
@@ -122,16 +134,28 @@ def split_tokens(expression):
         queue.append(operators_stack.pop())
 
     return queue
-
-
-def parser(expression) -> double:
+               
+            
+def parser(expression: str) -> float:
     tokens = split_tokens(expression)
-    expression = {}
-
-    while tokens:
-        first = tokens.pop(0)
-        second = tokens.pop(0)
-
-        if (re.match(number_regex, second)):
-            # Binary Expression
-            pass
+    stack = []
+    
+    for token in tokens:
+        if token in '+-*/':
+            right = stack.pop()
+            left = stack.pop()
+            
+            if token == '+':
+                stack.append(Plus(left, right))
+            elif token == '-':
+                stack.append(Minus(left, right))
+            elif token == '*':
+                stack.append(Mul(left, right))
+            elif token == '/':
+                stack.append(Div(left, right))
+        elif token == '-u':
+            stack.append(UnaryMinus(stack.pop()))
+        else:
+            stack.append(Num(float(token)))
+    
+    return stack[0].calc()
