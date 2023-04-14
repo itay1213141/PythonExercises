@@ -1,4 +1,4 @@
-from myparser import *
+from parser import *
 import random
 import string
 

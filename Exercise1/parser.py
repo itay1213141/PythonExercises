@@ -28,6 +28,7 @@ class Num(Expression):
     def __str__(self) -> str:
         return str(self.number)
 
+
 class UnaryMinus(Expression):
     def __init__(self, expression) -> None:
         self.expression = expression
@@ -37,6 +38,7 @@ class UnaryMinus(Expression):
 
     def __str__(self) -> str:
         return f'(-{str(self.expression)})'
+
 
 class BinExp(Expression):
     def __init__(self, left, right) -> None:
@@ -54,6 +56,7 @@ class Plus(BinExp):
     def __str__(self) -> str:
         return f'{str(self.left)}+{str(self.right)}'
 
+
 class Minus(BinExp):
     def __init__(self, left, right) -> None:
         super().__init__(left, right)
@@ -63,6 +66,7 @@ class Minus(BinExp):
 
     def __str__(self) -> str:
         return f'{str(self.left)}-{str(self.right)}'
+
 
 class Mul(BinExp):
     def __init__(self, left, right) -> None:
@@ -74,6 +78,7 @@ class Mul(BinExp):
     def __str__(self) -> str:
         return f'{str(self.left)}*{str(self.right)}'
 
+
 class Div(BinExp):
     def __init__(self, left, right) -> None:
         super().__init__(left, right)
@@ -83,6 +88,7 @@ class Div(BinExp):
 
     def __str__(self) -> str:
         return f'{str(self.left)}/{str(self.right)}'
+
 
 def split_tokens(expression):
     tokens = re.split('([+\-*/()]|\d+\.\d+|\d+)', expression.strip())
@@ -116,7 +122,7 @@ def split_tokens(expression):
                 raise Exception("No matching (")
         elif get_precedence(token) > 0:
             precedence = get_precedence(token)
-            
+
             if token in unary:
                 while operators_stack and precedence < get_precedence(operators_stack[-1]):
                     queue.append(operators_stack.pop())
@@ -134,17 +140,17 @@ def split_tokens(expression):
         queue.append(operators_stack.pop())
 
     return queue
-               
-            
+
+
 def parser(expression: str) -> float:
     tokens = split_tokens(expression)
     stack = []
-    
+
     for token in tokens:
         if token in '+-*/':
             right = stack.pop()
             left = stack.pop()
-            
+
             if token == '+':
                 stack.append(Plus(left, right))
             elif token == '-':
@@ -157,5 +163,5 @@ def parser(expression: str) -> float:
             stack.append(UnaryMinus(stack.pop()))
         else:
             stack.append(Num(float(token)))
-    
+
     return stack[0].calc()
