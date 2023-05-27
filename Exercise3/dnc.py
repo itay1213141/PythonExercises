@@ -20,8 +20,52 @@ def dnc(baseFunc, combineFunc):
     return func
 
 
-def maxAreaHist(hist):
-    pass
+# This is an actual divide and conquer solution, but its not 'efficient' apparently
+def maxAreaHist2(array):
+    def calculateArea(heights, start, end):
+        if start > end:
+            return 0
+
+        min_index = start
+
+        for i in range(start, end + 1):
+            if heights[i] < heights[min_index]:
+                min_index = i
+
+        range_width = (end - start + 1)
+
+        return max(
+            heights[min_index] * range_width,
+            calculateArea(heights, start, min_index - 1),
+            calculateArea(heights, min_index + 1, end),
+        )
+
+    return calculateArea(array, 0, len(array) - 1)
 
 
-maxAreaHist([6, 2, 5, 4, 5, 1, 6])
+def maxAreaHist(array):
+    stack = []
+    max_area = 0
+    i = 0
+
+    while i < len(array):
+        if not stack or array[i] >= array[stack[-1]]:
+            stack.append(i)
+            i += 1
+        else:
+            top_index = stack.pop()
+            area = (
+                array[top_index]
+                * (i if not stack else i - stack[-1] - 1)
+            )
+            max_area = max(max_area, area)
+
+    while stack:
+        top_index = stack.pop()
+        area = (
+            array[top_index]
+            * (i if not stack else i - stack[-1] - 1)
+        )
+        max_area = max(max_area, area)
+
+    return max_area
